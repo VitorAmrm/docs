@@ -1,0 +1,617 @@
+openapi: 3.0.1
+info:
+  title: Universi.me API
+  version: 0.0.0
+  description: Documentação da API [Universi.me](https://github.com/ayty-org/hatcher-api) com a intenção de facilitar o consumo desta API.
+tags:
+- name: Login
+  description: Fique por dentro do login =)
+- name: Usuários
+  description: Fique por dentro de como acessar, cadastrar, alterar e deletar usuários =)
+#- name: Perfis
+#  description: Fique por dentro de como acessar, cadastrar, alterar e #deletar perfis =)
+- name: Projetos
+  description: Fique por dentro de como acessar, cadastrar, alterar e deletar projetos =)
+- name: Cursos
+  description: Fique por dentro de como acessar, cadastrar, alterar e deletar cursos =)
+  
+paths:
+  /api/v1/hatcher/auth:
+    post:
+      tags:
+      - Login
+      summary: rota de autenticação
+      description: Aqui você manda o login e a seha do usuário e recebe o login e
+        o token para a autorização das rotas
+      operationId: login
+      requestBody:
+        description: Login e Senha do Usuário
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      responses:
+        202:
+          description: ACCEPTED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        400:
+          description: BAD REQUEST
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description: FORBIDDEN
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ErrorResponse'
+        404:
+          description: NOT FOUND
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/hatcher/listUsers:
+    get:
+      security:
+        - hatcher_auth: []
+      tags:
+      - Usuários
+      summary: rota de listagem de usuarios
+      description: Aqui você tem como retorno uma lista de todos os usuários existentes na API
+      parameters:
+        - in: query
+          name: isPaged
+          schema:
+            type: boolean
+            default: true
+          description: The number of items to skip before starting to collect the result set
+        - in: query
+          name: pageNumber
+          schema:
+            type: integer
+            default: 0
+          description: The numbers of items to return
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+            default: 10
+          description: The numbers of items to return
+        - in: query
+          name: ord
+          schema:
+            type: string
+            default: 'id'
+          description: The numbers of items to return
+        - in: query
+          name: sort
+          schema: 
+            type: string
+            default: 'ASC'
+          description: The numbers of items to return
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pageable'
+  /api/v1/hatcher/update/{id}:
+     put:
+      security:
+          - hatcher_auth: []
+      summary: rota de atualização de um determinado usuário
+      tags:
+      - Usuários
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+            format: int64
+          required: true
+      requestBody:
+        content:
+          appliecation/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        200:
+          description: OK
+        404:
+          description: NOT FOUND
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ErrorResponse'
+                example:
+                  timestamp: 1613155922802
+                  status: 404
+                  error: Not Found
+                  message: Login Not Found
+                  path: /hatcher/remove/3
+  /api/v1/hatcher/register:
+    post:
+      tags:
+      - Usuários
+      summary: rota de cadastro de um usuário
+      description: Aqui você manda um User para registro no requestBody
+      operationId: register
+      requestBody:
+        description: Manda um UserRequest no requestBody - recebe o UserDTO do User cadastrado no responseBody
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+            example:
+              login: pessoa.exemplo
+              password: senha123
+              email: exemplo@gmail.com
+              fullName: exemplo soares da silva
+              image: http://imagem/usuario/exemplo
+              profile: ALUNO
+              
+        required: true
+      responses:
+        201:
+          description: CREATED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        400:
+          description: BAD REQUEST
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        403:
+          description: FORBIDDEN
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ErrorResponse'
+        409:
+          description: CONFLICT
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/hatcher/remove/{id}:
+    delete:
+      security:
+        - hatcher_auth: []
+      summary: rota de exclusão de um usuário
+      tags:
+      - Usuários
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+            format: int64
+          required: true
+      responses:
+        204:
+          description: NO CONTENT
+        404:
+          description: NOT FOUND
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ErrorResponse'
+                example:
+                  timestamp: 1613155922802
+                  status: 404
+                  error: Not Found
+                  message: Login Not Found
+                  path: /hatcher/remove/3
+  
+  /courses:
+    get:
+      security:
+        - hatcher_auth: []
+      tags:
+      - Cursos
+      summary: rota de listagem de cursos
+      description: Aqui você tem como retorno uma lista de todos os cursos existentes na API
+        
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Course'
+    post:
+      security:
+        - hatcher_auth: []
+      tags:
+      - Cursos
+      summary: rota de cadastro de um curso
+      operationId: registrar curso
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseRequest'
+        required: true
+      responses:
+        200:
+          description: OK
+  /courses/{id}:
+    get:
+      security:
+        - hatcher_auth: []
+      summary: rota para achar um determinado curso pelo Id
+      tags:
+      - Cursos
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+            format: int64
+          required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+    put:
+      security:
+        - hatcher_auth: []
+      summary: rota para atualização de um determinado curso
+      tags:
+      - Cursos
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+            format: int64
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Course'
+      responses:
+        200:
+          description: OK
+    delete:
+      security:
+        - hatcher_auth: []
+      summary: rota para exclusão de um determinado curso
+      tags:
+      - Cursos
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+            format: int64
+          required: true
+      responses:
+        200:
+          description: OK
+          
+  /api/v1/projects:
+    get:
+      security:
+        - hatcher_auth: []
+      summary: rota de listagem de projetos
+      tags:
+      - Projetos
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
+    post:
+      security:
+        - hatcher_auth: []
+      summary: rota para cadastro de um projeto
+      tags:
+      - Projetos
+      requestBody:
+        description: Login e Senha do Usuário
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectRequest'
+        required: true
+      responses:
+        201:
+          description: CREATED
+        404:
+          description: NOT FOUND
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ErrorResponse'
+                example:
+                  timestamp: 1613155922802
+                  status: 404
+                  error: Not Found
+                  message: Login Not Found
+                  path: /hatcher/remove/3
+  /api/v1/projects/{id}:
+    get:
+      security:
+        - hatcher_auth: []
+      summary: rota para retorno de um projeto pelo Id
+      tags:
+      - Projetos
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+            format: int64
+          required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        404:
+          description: NOT FOUND
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ErrorResponse'
+                example:
+                  timestamp: 1613155922802
+                  status: 404
+                  error: Not Found
+                  message: Login Not Found
+                  path: /hatcher/remove/3
+    put:
+      security:
+        - hatcher_auth: []
+      summary: rota para atualização de um determinado projeto
+      tags:
+      - Projetos
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+            format: int64
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Project'
+      responses:
+        200:
+          description: OK
+        404:
+          description: NOT FOUND
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ErrorResponse'
+                example:
+                  timestamp: 1613155922802
+                  status: 404
+                  error: Not Found
+                  message: Login Not Found
+                  path: /hatcher/remove/3
+    delete:
+      security:
+        - hatcher_auth: []
+      summary: rota para exclusão de um determinado projeto
+      tags:
+      - Projetos
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+            format: int64
+          required: true
+      responses:
+        200:
+          description: OK
+        404:
+          description: NOT FOUND
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ErrorResponse'
+                example:
+                  timestamp: 1613155922802
+                  status: 404
+                  error: Not Found
+                  message: Login Not Found
+                  path: /hatcher/remove/3
+  
+components:
+  schemas:
+    LoginRequest:
+      type: object
+      properties:
+        login:
+          type: string
+        password:
+          type: string
+    LoginResponse:
+      type: object
+      properties:
+        login:
+          type: string
+        token:
+          type: string
+          
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+        status:
+          type: integer
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+    
+    UserDTO:
+      type: object
+      properties:
+        login:
+          type: string
+        email:
+          type: string
+        fullName:
+          type: string
+    UserRequest:
+      type: object
+      properties:
+        login:
+          type: string
+        password:
+          type: string
+        email:
+          type: string
+        fullName:
+          type: string
+        image:
+          type: string
+        profile:
+          type: string
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+      allOf:
+          - $ref: '#/components/schemas/UserRequest'
+    
+    Course:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+      allOf:
+        - $ref: '#/components/schemas/CourseRequest'
+    CourseRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+  
+    Project:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+      allOf:
+        - $ref: '#/components/schemas/ProjectRequest'
+    ProjectRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        logo:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endtDate:
+          type: string
+          format: date
+    
+    Pageable:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+              $ref: '#/components/schemas/UserDTO'
+        pageable:
+          type: object
+          properties:
+            sort:
+              type: object
+              properties:
+                sorted:
+                  type: boolean
+                unsorted:
+                  type: boolean
+                empty:
+                  type: boolean
+            pageNumber:
+              type: integer
+            pageSize:
+              type: integer
+            offset:
+              type: integer
+            paged:
+              type: boolean
+            unpaged:
+              type: boolean
+        last:
+          type: boolean
+        totalPages:
+          type: boolean
+        totalElements:
+          type: boolean
+        first:
+          type: boolean
+        size:
+          type: boolean
+        number: 
+          type: boolean
+        sort:
+          type: object
+          properties:
+            sorted:
+              type: boolean
+            unsorted:
+              type: boolean
+            empty:
+              type: boolean
+            
+  securitySchemes:
+    hatcher_auth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
